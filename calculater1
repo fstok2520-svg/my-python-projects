@@ -10,7 +10,7 @@ def multiply (x, y):
 def divide (x, y):
     if y == 0:
         return "it cannot be divided by zero"
-    return x / y   
+    return x / y 
 
 def calculeter():
     print ("welcome to the calculator")
@@ -19,15 +19,15 @@ def calculeter():
     print ("2. (-)")
     print ("3. (*)")
     print ("4. (/)")
-    
+if __name__ == "__main__":
+    calculeter()
 choice = input ("enter the transaction number (1/2/3/4)")
 if choice in ('1','2','3','4'):
     try:
         num1 = float (input('Enter the first number : '))
         num2 = float (input('enter the second number : '))
     except ValueError:
-        print ('Plase enter a valid number')
- 
+        print ('Plase enter a valid number') 
     if choice == '1':
         print (f"Otput : {num1} + {num2} = {add(num1 ,num2)}")
     elif choice == '2':
@@ -38,5 +38,3 @@ if choice in ('1','2','3','4'):
         print (f"otput : {num1} / {num2} = {divide (num1, num2)}")
 else:
     print ("Incorrect , try again")
-if __name__ == "__main__":
-    calculeter()
