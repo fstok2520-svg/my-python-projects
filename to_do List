@@ -1,0 +1,48 @@
+tasks = []
+def show_tasks ():
+    if not tasks:
+        print ("your to_do list empty!")
+    else :
+        print ("\n ___your to_do list___")
+        for index, task  in enumerate(tasks, 1):
+            print (f"{index}.{task}")
+            
+def add_task():
+    task = input("\nEnter the task tiy want to do add : ")
+    tasks.append (task)
+    print (f"task '{task}' added successfully! ")
+def delete_task ():
+    show_tasks()
+    if tasks:
+        try:
+            task_num = int (input("enter the number of the task to delete: "))
+            if 1<= task_num <= len (tasks):
+                removed = tasks.pop(task_num - 1)
+                print (f"task '{removed}' deleted successfully! ")
+            else :
+                print ("invaled task number!")
+        except ValueError:
+            print ("pleas enter the valid number !")
+def todo_app ():
+    while True:
+        print ("\n TO_DO LIST MENU ")
+        print ("1. viwe tasks ")
+        print ("2. add tasks")
+        print ("3. Delete task")
+        print ("4. Exit")
+
+        choice = input ("choose an option (1/2/3/4): ") 
+        if choice == "1":
+            show_tasks ()
+        elif choice == "2":
+            add_task()
+        elif choice == "3":
+            delete_task ()
+        elif choice == "4":
+            print ("Goodbye !")
+        else :
+            
+            print ("invailed choice, please try again ")
+        break
+if __name__ == "__main__":
+    todo_app()
