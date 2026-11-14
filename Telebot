@@ -1,0 +1,12 @@
+import telebot 
+TOKEN = 'YOUR_BOY_TOKEN' #الرمز السري الخاص فيكم وبتاخدوه من التليغرام 
+bot = telebot.TeleBot (TOKEN )
+@bot.message_handler(commands=['start', 'help'])
+def send_welcome(message):
+    bot.reply_to (message, "hello i am your Python bot, send me message and i will repeat it :")
+@bot.message_handler(func= lambda message : True)
+def echo_all(message):
+    bot.reply_to(message , message.text) 
+if __name__ =="__main__":
+    print(" Bot is up and running...")
+    bot.infinity_polling()
