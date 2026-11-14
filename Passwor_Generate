@@ -1,0 +1,32 @@
+import random
+import string 
+def generate_password (length=12, difficulty="hard"):
+    if difficulty == 'easy':
+        characters = string.ascii_letters 
+    elif difficulty    == 'medium':
+        characters = string.ascii_letters + string.digits
+    else :
+        characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join (random.choice (characters)for _ in range (length))       
+    return password 
+    
+if __name__ == "__main__":
+    print ('WLCOME TO THE SECURE PASSWORD GENERATOR')
+    try:
+        user_length = int(input('Enter the desired password length (e.g., 12): '))
+        if user_length < 6:
+            print ("\nwarning: length is too shorrt. it's recommended to use at last 6 characters")
+        print ("\n choose the password difficulty level: ")
+        print ("1. easy")
+        print ("2. medium")
+        print ("3. hard")
+        choice = input ("enter your choice ('easy' , 'medium' , 'hard'): ").strip().lower ()
+         
+        if choice not in ['easy' , 'medium' , 'hard']:
+            print ("Unknown choice defaulting to 'hard' level. ")
+            choice = "hard"
+        secure_password = generate_password(user_length, choice)
+        print(f"\n✨ Your suggested password ({choice}):\n{secure_password}")
+        
+    except ValueError:
+        print("❌ Error: Please enter a valid number for the password length.")
