@@ -1,0 +1,49 @@
+import time
+from datetime import datetime
+
+def set_alarm():
+    print("⏰ Welcome to the Python Alarm Clock")
+    print("Please set your alarm time (24-hour format).")
+    
+    while True:
+        try:
+            # استقبال وقت المنبه من المستخدم
+            alarm_hour = input("Enter alarm hour (00-23): ").strip()
+            alarm_minute = input("Enter alarm minute (00-59): ").strip()
+            
+            # التحقق من أن المدخلات أرقام وتدخل في النطاق الصحيح
+            if not (alarm_hour.isdigit() and alarm_minute.isdigit()):
+                print("❌ Error: Please enter valid numbers for hours and minutes.")
+                continue
+                
+            alarm_hour = int(alarm_hour)
+            alarm_minute = int(alarm_minute)
+            
+            if 0 <= alarm_hour <= 23 and 0 <= alarm_minute <= 59:
+                print(f"✅ Alarm successfully set for {alarm_hour:02d}:{alarm_minute:02d}!")
+                break
+            else:
+                print("⚠️ Invalid time range! Hours must be 0-23 and minutes 0-59.")
+        except ValueError:
+            print("❌ Invalid input. Please try again.")
+
+    # حلقة مراقبة الوقت الحالي باستمرار
+    print("⏳ Alarm is running... Waiting for the time to come.")
+    while True:
+        # جلب الوقت الحالي بدقة (ساعة ودقيقة)
+        current_time = datetime.now()
+        current_hour = current_time.hour
+        current_minute = current_time.minute
+        
+        # مطابقة الوقت الحالي مع وقت المنبه
+        if current_hour == alarm_hour and current_minute == alarm_minute:
+            print("\n" + "="*40)
+            print("🚨 WAKE UP! WAKE UP! ALARM TIME! 🚨")
+            print("="*40)
+            break
+            
+        # إيقاف البرنامج مؤقتاً لمدة 30 ثانية قبل إعادة الفحص (لتوفير طاقة المعالج)
+        time.sleep(30)
+
+if __name__ == "__main__":
+    set_alarm()
