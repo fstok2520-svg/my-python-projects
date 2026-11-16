@@ -1,0 +1,40 @@
+def count_words():
+    print("--- برنامج عداد الكلمات الذكي (مع وقت القراءة) ---")
+    
+    # 1. طلب النص من المستخدم
+    text = input("اكتب أو الصق النص هنا: ").strip()
+    
+    # التحقق إذا النص فارغ
+    if not text:
+        print("عذراً، لم تقم بإدخال أي نص!")
+        return
+
+    # 2. حساب عدد الكلمات
+    words_list = text.split()
+    word_count = len(words_list)
+    
+    # 3. حساب عدد الحروف (مع وبدون المسافات)
+    char_count_with_spaces = len(text)
+    char_count_without_spaces = len(text.replace(" ", ""))
+    
+    # 4. حساب وقت القراءة المتوقع (بافتراض أن الإنسان يقرأ 200 كلمة في الدقيقة)
+    # نقسم عدد الكلمات على 200، ولو طلع أقل من دقيقة بنحسبها بالثواني
+    words_per_minute = 200
+    reading_time_minutes = word_count / words_per_minute
+    
+    if reading_time_minutes < 1:
+        # تحويل الدقائق إلى ثواني (عدد الكلمات * 60 ثانية / 200 كلمة)
+        reading_time_seconds = int((word_count * 60) / words_per_minute)
+        time_output = f"أقل من دقيقة ({reading_time_seconds} ثانية تقريباً)"
+    else:
+        time_output = f"{round(reading_time_minutes, 1)} دقيقة تقريباً"
+
+    # 5. طباعة النتائج بشكل مرتب
+    print("\n--- النتائج ---")
+    print(f"عدد الكلمات: {word_count}")
+    print(f"عدد الحروف (مع المسافات): {char_count_with_spaces}")
+    print(f"عدد الحروف (بدون المسافات): {char_count_without_spaces}")
+    print(f"وقت القراءة المتوقع: {time_output}")
+
+# تشغيل الدالة
+count_words()
