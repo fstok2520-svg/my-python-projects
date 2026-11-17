@@ -1,0 +1,58 @@
+import os
+import shutil
+
+def organize_files(target_directory):
+    # التأكد من أن المسار موجود
+    if not os.path.exists(target_directory):
+        print("The specified directory does not exist!")
+        return
+
+    # قاموس يحدد أنواع الملفات والمجلدات الخاصة بكل نوع
+    extensions_map = {
+        'Images': ['.jpg', '.jpeg', '.png', '.gif', '.bmp'],
+        'Documents': ['.pdf', '.docx', '.doc', '.txt', '.xlsx', '.pptx'],
+        'Videos': ['.mp4', '.mkv', '.avi', '.mov'],
+        'Music': ['.mp3', '.wav', '.aac'],
+        'Code': ['.py', '.js', '.html', '.css', '.cpp'],
+        'Archives': ['.zip', '.rar', '.tar', '.gz']
+    }
+
+    # قراءة كل الملفات الموجودة في المجلد المستهدف
+    for filename in os.listdir(target_directory):
+        file_path = os.path.join(target_directory, filename)
+
+        # نتأكد أنه ملف وليس مجلد
+        if os.path.isfile(file_path):
+            # استخراج امتداد الملف
+            file_ext = os.path.splitext(filename)[1].lower()
+            
+            moved = False
+            # مقارنة الامتداد مع القاموس لتحديد المجلد المناسب
+            for folder_name, extensions in extensions_map.items():
+                if file_ext in extensions:
+                    folder_path = os.path.join(target_directory, folder_name)
+                    
+                    # إنشاء المجلد إذا لم يكن موجوداً مسبقاً
+                    if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
+                        
+                    # نقل الملف إلى المجلد المحدد
+                    shutil.move(file_path, os.path.join(folder_path, filename))
+                    print(f"Moved: {filename} -> {folder_name}/")
+                    moved = True
+                    break
+            
+            # إذا كان الامتداد غير موجود بالقاموس، نتركه أو نضعه في مجلد "Others" (اختياري)
+            if not moved:
+                other_folder = os.path.join(target_directory, 'Others')
+                if not os.path.exists(other_folder):
+                    os.makedirs(other_folder)
+                shutil.move(file_path, os.path.join(other_folder, filename))
+                print(f"Moved: {filename} -> Others/")
+
+    print("Organization completed successfully! ✨")
+
+if __name__ == "__main__":
+    # ضعي هنا مسار المجلد الذي تريدين ترتيمه (مثلاً مجلد التجربة)
+    path = input("Enter the path of the directory to organize: ")
+    organize_files(path)
