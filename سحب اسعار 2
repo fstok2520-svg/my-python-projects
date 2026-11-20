@@ -1,0 +1,149 @@
+import logging
+import re
+from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+import requests
+
+
+# ---------------------------------------------------------
+# المرحلة الرابعة: إعداد نظام التسجيل والمراقبة
+# ---------------------------------------------------------
+def setup_logger(name: str = "price_scraper") -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    logger.handlers.clear()
+
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
+
+
+# ---------------------------------------------------------
+# المرحلة الأولى: التحقق من الرابط وإرسال الطلب بأمان
+# ---------------------------------------------------------
+def fetch_html(url: str, logger: logging.Logger, timeout: int = 10) -> str | None:
+    if not url or not isinstance(url, str):
+        logger.warning("الرابط فارغ أو غير نصي.")
+        return None
+
+    clean_url = url.strip()
+    if not clean_url or "\n" in clean_url or "\r" in clean_url or len(clean_url) > 2048:
+        logger.warning("الرابط غير صالح من حيث الطول أو التنسيق.")
+        return None
+
+    parsed = urlparse(clean_url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        logger.warning(f"مخطط الرابط أو المضيف غير صالح: {clean_url}")
+        return None
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; PriceScraper/1.0)"
+    }
+
+    try:
+        response = requests.get(clean_url, headers=headers, timeout=timeout)
+        if response.status_code != 200:
+            logger.warning(f"استجابة غير ناجحة من الخادم. رمز الحالة: {response.status_code}")
+            return None
+        return response.text
+    except requests.Timeout:
+        logger.error(f"انتهت مهلة الاتصال بالرابط: {clean_url}")
+        return None
+    except requests.RequestException as exc:
+        logger.error(f"حدث خطأ أثناء الاتصال بالرابط: {exc}")
+        return None
+
+
+# ---------------------------------------------------------
+# المرحلة الثانية: استخراج عنصر السعر من HTML بأمان
+# ---------------------------------------------------------
+def extract_raw_price(html: str, logger: logging.Logger) -> str | None:
+    if not html or not html.strip():
+        logger.warning("محتوى الصفحة فارغ ولا يمكن استخراج السعر.")
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    price_tag = soup.find("span", class_="price")
+    if price_tag is None:
+        logger.warning("لم يتم العثور على عنصر السعر في الصفحة.")
+        return None
+
+    raw_text = price_tag.get_text(strip=True)
+    if not raw_text:
+        logger.warning("عنصر السعر موجود لكنه فارغ.")
+        return None
+
+    return raw_text
+
+
+# ---------------------------------------------------------
+# المرحلة الثالثة: تنظيف السعر والتحقق من منطقيته الرقمية
+# ---------------------------------------------------------
+def clean_and_validate_price(raw_text: str, logger: logging.Logger) -> float | None:
+    without_commas = raw_text.replace(",", "")
+    cleaned_text = re.sub(r"[^\d.]", "", without_commas).strip()
+
+    if not cleaned_text or cleaned_text == ".":
+        logger.warning(f"لم يتم العثور على قيمة رقمية واضحة في النص: '{raw_text}'")
+        return None
+
+    try:
+        price = float(cleaned_text)
+    except ValueError:
+        logger.error(f"تعذر تحويل النص '{raw_text}' إلى رقم عشري.")
+        return None
+
+    if price <= 0:
+        logger.warning(f"قيمة السعر غير منطقية: {price}")
+        return None
+
+    return price
+
+
+# ---------------------------------------------------------
+# التنسيق العام: تشغيل المراحل الأربع بالترتيب
+# ---------------------------------------------------------
+def scrape_price(url: str, logger: logging.Logger) -> float | None:
+    logger.info(f"بدء معالجة الرابط: {url}")
+
+    html = fetch_html(url, logger=logger)
+    if html is None:
+        logger.info("توقفت العملية في المرحلة الأولى.")
+        return None
+
+    raw_price = extract_raw_price(html, logger=logger)
+    if raw_price is None:
+        logger.info("توقفت العملية في المرحلة الثانية.")
+        return None
+
+    final_price = clean_and_validate_price(raw_price, logger=logger)
+    if final_price is None:
+        logger.info("توقفت العملية في المرحلة الثالثة.")
+        return None
+
+    logger.info(f"تم استخراج السعر وتنظيفه بنجاح: {final_price}")
+    return final_price
+
+
+# ---------------------------------------------------------
+# اختبار سريع للنظام
+# ---------------------------------------------------------
+if __name__ == "__main__":
+    app_logger = setup_logger()
+
+    # اختبار المرحلة 2 + 3 + 4 مباشرة بنص HTML تجريبي
+    sample_html = '<div><span class="price">$1,299.50</span></div>'
+    raw = extract_raw_price(sample_html, app_logger)
+    if raw:
+        result = clean_and_validate_price(raw, app_logger)
+        app_logger.info(f"نتيجة الاختبار التجريبي: {result}")
+
+    # اختبار رابط غير صالح لاختبار المرحلة الأولى والتسجيل
+    scrape_price("not-a-valid-url", app_logger)
