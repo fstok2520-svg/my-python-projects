@@ -1,0 +1,91 @@
+from urllib.parse import urlparse
+import re
+import logging
+from bs4 import BeautifulSoup
+
+
+def get_and_validate_url(max_length: int = 2048) -> str | None:
+    raw_input = input("أدخل رابط المنتج (https://...): ")
+
+    # 1. التحقق من الطول قبل المعالجة
+    if len(raw_input) > max_length:
+        print("خطأ: الإدخال أطول من الحد المسموح.")
+        return None
+
+    # 2. إزالة الفراغات الزائدة في البداية والنهاية
+    cleaned_input = raw_input.strip()
+
+    # 3. منع الإدخال الفارغ أو وجود أسطر جديدة داخل الرابط
+    if not cleaned_input:
+        print("تنبيه: لم يتم إدخال أي رابط.")
+        return None
+
+    if "\n" in cleaned_input or "\r" in cleaned_input:
+        print("خطأ: الرابط لا يجب أن يحتوي على أسطر جديدة.")
+        return None
+
+    # 4. تحليل الرابط والتحقق من البروتوكول والمضيف
+    parsed = urlparse(cleaned_input)
+    if parsed.scheme not in ("http", "https"):
+        print("خطأ: يجب أن يبدأ الرابط بـ http:// أو https:// فقط.")
+        return None
+
+    if not parsed.netloc:
+        print("خطأ: الرابط ينقصه اسم الموقع (مثل example.com).")
+        return None
+
+    return cleaned_input
+
+
+# المرحلة الثانية: استخراج وتنظيف السعر
+def extract_and_clean_price(html: str) -> float | None:
+    if not html or not html.strip():
+        print("محتوى الصفحة فارغ ولا يمكن استخراج السعر.")
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    price_tag = soup.find("span", class_="price")
+    if price_tag is None:
+        print("لم يتم العثور على عنصر السعر في الصفحة.")
+        return None
+
+    raw_text = price_tag.get_text(strip=True)
+    if not raw_text:
+        print("عنصر السعر فارغ.")
+        return None
+
+    without_commas = raw_text.replace(",", "")
+    cleaned_text = re.sub(r"[^\d.]", "", without_commas).strip()
+
+    if not cleaned_text or cleaned_text == ".":
+        print("لم يتم العثور على قيمة رقمية واضحة.")
+        return None
+
+    try:
+        price = float(cleaned_text)
+    except ValueError:
+        print(f"خطأ: تعذر تحويل السعر '{raw_text}' إلى رقم.")
+        return None
+
+    if price <= 0:
+        print(f"تنبيه: قيمة السعر غير منطقية ({price}).")
+        return None
+
+    return price
+
+
+# المرحلة الرابعة: إعداد التسجيل والمراقبة
+def setup_logger(name: str = "price_scraper") -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    return logger
